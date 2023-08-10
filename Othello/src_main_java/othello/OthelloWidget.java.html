@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="sr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>OthelloWidget.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">AllTests (17.01.2023. 10:46:39)</a> &gt; <a href="../../index.html" class="el_group">Othello</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">othello</a> &gt; <span class="el_source">OthelloWidget.java</span></div><h1>OthelloWidget.java</h1><pre class="source lang-java linenums">package othello;
+
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Point;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
+
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+
+public class OthelloWidget extends JPanel implements ActionListener, SpotListener {
+
+	/* Enum to identify player. */
+
+<span class="fc" id="L20">	private enum Player {</span>
+<span class="fc" id="L21">		BLACK, WHITE</span>
+	};
+
+	public JSpotBoard _board; /* SpotBoard playing area. */
+	private JLabel _message; /* Label for messages. */
+	public boolean _game_won; /* Indicates if games was been won already. */
+	public boolean _game_draw; /* Indicates if games was been drawn. */
+	private int _gameint;
+	public int _noBlack;
+	public int _noWhite;
+	private String _winnerName;
+	public HashSet&lt;Point&gt; placeablePositions;
+
+	private Player _next_to_play; /* Identifies who has next turn. */
+
+<span class="fc" id="L36">	public OthelloWidget() {</span>
+
+		/* Create SpotBoard and message label. */
+
+
+<span class="fc" id="L41">		_board = new JSpotBoard(8, 8, new Color(0.5f, 0.5f, 0.5f));</span>
+<span class="fc" id="L42">		_size = 8;</span>
+
+<span class="fc" id="L44">		Spot initSpot1 = _board.getSpotAt(4, 4);</span>
+<span class="fc" id="L45">		Spot initSpot2 = _board.getSpotAt(4, 3);</span>
+<span class="fc" id="L46">		Spot initSpot3 = _board.getSpotAt(3, 4);</span>
+<span class="fc" id="L47">		Spot initSpot4 = _board.getSpotAt(3, 3);</span>
+		
+<span class="fc" id="L49">		placeablePositions = new HashSet&lt;Point&gt;();</span>
+		
+<span class="fc" id="L51">		_message = new JLabel();</span>
+
+		/* Set layout and place SpotBoard at center. */
+
+<span class="fc" id="L55">		setLayout(new BorderLayout());</span>
+<span class="fc" id="L56">		add(_board, BorderLayout.CENTER);</span>
+
+		/* Create subpanel for message area and reset button. */
+
+<span class="fc" id="L60">		JPanel reset_message_panel = new JPanel();</span>
+<span class="fc" id="L61">		reset_message_panel.setLayout(new BorderLayout());</span>
+
+		/* Reset button. Add ourselves as the action listener. */
+
+<span class="fc" id="L65">		JButton reset_button = new JButton(&quot;Restart&quot;);</span>
+<span class="fc" id="L66">		reset_button.addActionListener(this);</span>
+<span class="fc" id="L67">		reset_message_panel.add(reset_button, BorderLayout.EAST);</span>
+<span class="fc" id="L68">		reset_message_panel.add(_message, BorderLayout.CENTER);</span>
+
+		/* Add subpanel in south area of layout. */
+
+<span class="fc" id="L72">		add(reset_message_panel, BorderLayout.SOUTH);</span>
+
+		/*
+		 * Add ourselves as a spot listener for all of the spots on the spot board.
+		 */
+<span class="fc" id="L77">		_board.addSpotListener(this);</span>
+
+		/* Reset game. */
+<span class="fc" id="L80">		resetGame();</span>
+<span class="fc" id="L81">		spotClicked(initSpot3);</span>
+
+<span class="fc" id="L83">		spotClicked(initSpot4);</span>
+<span class="fc" id="L84">		spotClicked(initSpot2);</span>
+<span class="fc" id="L85">		spotClicked(initSpot1);</span>
+
+<span class="fc" id="L87">	}</span>
+
+	/*
+	 * resetGame
+	 * 
+	 * Resets the game by clearing all the spots on the board, picking a new secret
+	 * spot, resetting game status fields, and displaying start message.
+	 * 
+	 */
+
+	public void resetGame() {
+		/*
+		 * Clear all spots on board. Uses the fact that SpotBoard implements
+		 * Iterable&lt;Spot&gt; to do this in a for-each loop.
+		 */
+
+<span class="fc" id="L103">		Spot initSpot1 = _board.getSpotAt(4, 4);</span>
+<span class="fc" id="L104">		Spot initSpot2 = _board.getSpotAt(4, 3);</span>
+<span class="fc" id="L105">		Spot initSpot3 = _board.getSpotAt(3, 4);</span>
+<span class="fc" id="L106">		Spot initSpot4 = _board.getSpotAt(3, 3);</span>
+<span class="fc" id="L107">		_gameint = 0;</span>
+		
+<span class="fc bfc" id="L109" title="All 2 branches covered.">		for (Spot s : _board) {</span>
+<span class="fc" id="L110">			s.clearSpot();</span>
+<span class="fc" id="L111">			s.setSpotColor(Color.BLACK);</span>
+		}
+
+		/* Reset game won and next to play fields */
+<span class="fc" id="L115">		_game_won = false;</span>
+<span class="fc" id="L116">		_game_draw = false;</span>
+<span class="fc" id="L117">		_next_to_play = Player.BLACK;</span>
+
+		/* Display game start message. */
+
+<span class="fc" id="L121">		spotClicked(initSpot3);</span>
+
+<span class="fc" id="L123">		spotClicked(initSpot4);</span>
+<span class="fc" id="L124">		spotClicked(initSpot2);</span>
+<span class="fc" id="L125">		spotClicked(initSpot1);</span>
+		
+<span class="fc" id="L127">		_message.setText(&quot;Welcome to Othello. Black to play&quot;);</span>
+<span class="fc" id="L128">	}</span>
+
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		/* Handles reset game button. Simply reset the game. */
+<span class="nc" id="L134">		resetGame();</span>
+<span class="nc" id="L135">	}</span>
+
+	/*
+	 * Implementation of SpotListener below. Implements game logic as responses to
+	 * enter/exit/click on spots.
+	 */
+
+	@Override
+	public void spotClicked(Spot s) {
+
+<span class="fc bfc" id="L145" title="All 4 branches covered.">		if (isLegalMove(s) == false &amp;&amp; _gameint &gt;= 4) {</span>
+<span class="fc" id="L146">			return;</span>
+		}
+		
+		/* If game already won, do nothing. */
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">		if (_game_won) {</span>
+<span class="nc" id="L151">			return;</span>
+		}
+
+<span class="fc" id="L154">		flipPieces(s);</span>
+		/*
+		 * Set up player and next player name strings, and player color as local
+		 * variables to be used later.
+		 */
+
+<span class="fc" id="L160">		String player_name = null;</span>
+<span class="fc" id="L161">		String next_player_name = null;</span>
+<span class="fc" id="L162">		Color player_color = null;</span>
+
+<span class="fc bfc" id="L164" title="All 2 branches covered.">		if (_next_to_play == Player.BLACK) {</span>
+<span class="fc" id="L165">			player_color = Color.BLACK;</span>
+<span class="fc" id="L166">			player_name = &quot;Black&quot;;</span>
+<span class="fc" id="L167">			next_player_name = &quot;White&quot;;</span>
+<span class="fc" id="L168">			_next_to_play = Player.WHITE;</span>
+<span class="fc" id="L169">		} else {</span>
+<span class="fc" id="L170">			player_color = Color.WHITE;</span>
+<span class="fc" id="L171">			player_name = &quot;White&quot;;</span>
+<span class="fc" id="L172">			next_player_name = &quot;Black&quot;;</span>
+<span class="fc" id="L173">			_next_to_play = Player.BLACK;</span>
+		}
+
+		/* Set color of spot clicked and toggle. */
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">		if (s.isEmpty()) {</span>
+<span class="fc" id="L178">			s.setSpotColor(player_color);</span>
+<span class="fc" id="L179">			s.toggleSpot();</span>
+
+<span class="fc" id="L181">		} else {</span>
+
+<span class="nc bnc" id="L183" title="All 2 branches missed.">			if (_next_to_play == Player.BLACK) {</span>
+<span class="nc" id="L184">				player_color = Color.WHITE;</span>
+<span class="nc" id="L185">				player_name = &quot;White&quot;;</span>
+<span class="nc" id="L186">				next_player_name = &quot;White&quot;;</span>
+<span class="nc" id="L187">				_next_to_play = Player.WHITE;</span>
+
+<span class="nc" id="L189">			} else {</span>
+
+<span class="nc" id="L191">				player_color = Color.BLACK;</span>
+<span class="nc" id="L192">				player_name = &quot;Black&quot;;</span>
+<span class="nc" id="L193">				next_player_name = &quot;Black&quot;;</span>
+<span class="nc" id="L194">				_next_to_play = Player.BLACK;</span>
+
+			}
+		}
+//		System.out.println(&quot;Checking Valid Moves&quot;);
+//		Spot spot = _board.getSpotAt(5, 3);
+//		System.out.println(isLegalMove(spot));
+<span class="fc" id="L201">		int numOfValids = 0;</span>
+<span class="fc" id="L202">		_gameint ++;</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">		for (Spot Spotter : _board) {</span>
+//			System.out.println(&quot;Testing&quot;);
+<span class="fc" id="L205">			Spotter.unhighlightSpot();</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">			if (isLegalMove(Spotter)) {</span>
+<span class="fc" id="L207">				numOfValids++;</span>
+				//Spotter.highlightSpot();
+				//System.out.println(&quot;At Position: &quot; + Spotter.getCoordString());
+				//System.out.println(&quot;Possible Move Checker Output : &quot; + isLegalMove(Spotter));
+			}
+		}
+		
+<span class="fc bfc" id="L214" title="All 4 branches covered.">		if (numOfValids == 0 &amp;&amp; _gameint &gt;= 4) {</span>
+			
+<span class="fc bfc" id="L216" title="All 2 branches covered.">			if (_next_to_play == Player.BLACK) {</span>
+<span class="fc" id="L217">				player_color = Color.WHITE;</span>
+<span class="fc" id="L218">				player_name = &quot;White&quot;;</span>
+<span class="fc" id="L219">				next_player_name = &quot;White&quot;;</span>
+<span class="fc" id="L220">				_next_to_play = Player.WHITE;</span>
+
+<span class="fc" id="L222">			} else {</span>
+
+<span class="fc" id="L224">				player_color = Color.BLACK;</span>
+<span class="fc" id="L225">				player_name = &quot;Black&quot;;</span>
+<span class="fc" id="L226">				next_player_name = &quot;Black&quot;;</span>
+<span class="fc" id="L227">				_next_to_play = Player.BLACK;</span>
+			}
+		}
+		//System.out.println(&quot;Win Checker Output: &quot; + checkWin());
+
+		//System.out.println(&quot;Win Checker Output: &quot; + checkWin());
+		Color nextCol;
+<span class="fc bfc" id="L234" title="All 2 branches covered.">		if (player_color == Color.BLACK) {</span>
+<span class="fc" id="L235">			nextCol = Color.WHITE;</span>
+<span class="fc" id="L236">		} else {</span>
+<span class="fc" id="L237">			nextCol = Color.BLACK;</span>
+		}
+		
+		//findPlaceableLocations(player_color, nextCol);
+	
+		/*
+		 * Check if spot clicked is secret spot. If so, mark game as won and update
+		 * background of spot to show that it was the secret spot.
+		 */
+
+		/*
+		 * Update the message depending on what happened. If spot is empty, then we must
+		 * have just cleared the spot. Update message accordingly. If spot is not empty
+		 * and the game is won, we must have just won. Calculate score and display as
+		 * part of game won message. If spot is not empty and the game is not won,
+		 * update message to report spot coordinates and indicate whose turn is next.
+		 */
+
+<span class="fc bfc" id="L255" title="All 2 branches covered.">		if (_gameint &gt;= 4) {</span>
+<span class="pc bpc" id="L256" title="1 of 2 branches missed.">		if (s.isEmpty()) {</span>
+<span class="nc" id="L257">			_message.setText(next_player_name + &quot; to play.&quot;);</span>
+<span class="nc" id="L258">		} else {</span>
+<span class="pc bpc" id="L259" title="1 of 4 branches missed.">			if ((checkWin() == true) &amp;&amp; (_winnerName != (null))) {</span>
+
+<span class="fc" id="L261">				_message.setText(_winnerName + &quot; wins! &quot; + &quot; Score: &quot; + _noBlack + &quot; to &quot; + _noWhite);</span>
+				
+<span class="fc" id="L263">			} else {</span>
+
+<span class="pc bpc" id="L265" title="2 of 4 branches missed.">				if ((_winnerName == null) &amp;&amp; (_game_won == true)) {</span>
+
+<span class="nc" id="L267">					_message.setText(&quot; Draw game.&quot;);</span>
+
+<span class="nc" id="L269">				} else {</span>
+
+<span class="fc" id="L271">					_message.setText(next_player_name + &quot; to play.&quot;);</span>
+				}
+			}
+		}
+		}
+<span class="fc" id="L276">	}</span>
+
+	@Override
+	public void spotEntered(Spot s) {
+		/* Highlight spot if game still going on. */
+
+<span class="fc bfc" id="L282" title="All 2 branches covered.">		if (_game_won) {</span>
+<span class="fc" id="L283">			return;</span>
+		}
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">		if (isLegalMove(s) == true) {</span>
+			
+<span class="fc" id="L287">		s.highlightSpot();</span>
+		}
+<span class="fc" id="L289">	}</span>
+
+	@Override
+	public void spotExited(Spot s) {
+		/* Unhighlight spot. */
+		
+			
+<span class="fc bfc" id="L296" title="All 2 branches covered.">			if (_game_won == true) {</span>
+<span class="fc" id="L297">				return;</span>
+			}
+
+<span class="fc" id="L300">		s.unhighlightSpot();</span>
+		
+<span class="fc" id="L302">	}</span>
+
+	public boolean checkWin() {
+
+<span class="fc bfc" id="L306" title="All 2 branches covered.">		if (_game_won) {</span>
+<span class="fc" id="L307">			return true;</span>
+		}
+
+<span class="fc" id="L310">		int countBlacks = 0;</span>
+<span class="fc" id="L311">		int countWhites = 0;</span>
+
+			
+<span class="fc bfc" id="L314" title="All 2 branches covered.">			for (Spot s : _board) {</span>
+<span class="fc bfc" id="L315" title="All 2 branches covered.">				if (s.getSpotColor() == Color.WHITE) {</span>
+	
+<span class="fc" id="L317">					countWhites++;</span>
+<span class="fc" id="L318">				}</span>
+
+<span class="pc bpc" id="L320" title="1 of 2 branches missed.">				else if (s.getSpotColor() == Color.BLACK</span>
+<span class="fc bfc" id="L321" title="All 2 branches covered.">						&amp;&amp; (s.isEmpty() == false)) {</span>
+					
+<span class="fc" id="L323">					countBlacks++;</span>
+				}
+			}
+
+<span class="fc" id="L327">			System.out.println(&quot;Blacks &quot; + countBlacks);</span>
+<span class="fc" id="L328">			System.out.println(&quot;Whites &quot; + countWhites);</span>
+<span class="fc" id="L329">			_noWhite = countWhites;</span>
+<span class="fc" id="L330">			_noBlack = countBlacks;</span>
+
+			
+            int playCol;
+<span class="fc bfc" id="L334" title="All 2 branches covered.">			if (_next_to_play == Player.BLACK) {</span>
+<span class="fc" id="L335">            	playCol = 0;</span>
+<span class="fc" id="L336">            } else {</span>
+<span class="fc" id="L337">            	playCol = 1;</span>
+            }
+            
+<span class="fc" id="L340">			System.out.println(&quot;Legal? &quot; + hasLegalMoves());</span>
+<span class="fc bfc" id="L341" title="All 2 branches covered.">			if ((hasLegalMoves() == false)) {</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">				if (countBlacks &gt; countWhites) {</span>
+<span class="fc" id="L343">					_winnerName = &quot;Black&quot;;</span>
+				} 
+				
+<span class="fc bfc" id="L346" title="All 2 branches covered.">				if (countWhites &gt; countBlacks) {</span>
+<span class="fc" id="L347">					_winnerName = &quot;White&quot;;</span>
+				} 
+				
+<span class="pc bpc" id="L350" title="1 of 2 branches missed.">				if (countWhites == countBlacks) {</span>
+<span class="nc" id="L351">					_winnerName = null;</span>
+				} 
+				
+<span class="fc" id="L354">				System.out.println(&quot;GAME WON&quot;);</span>
+<span class="fc" id="L355">				_game_won = true;</span>
+
+<span class="fc" id="L357">				return true;</span>
+
+
+			}
+
+		
+
+
+<span class="fc" id="L365">		return false;</span>
+
+	}
+
+	public boolean checkDraw() {
+<span class="nc" id="L370">		int countBlacks = 0;</span>
+<span class="nc" id="L371">		int countWhites = 0;</span>
+
+<span class="nc bnc" id="L373" title="All 2 branches missed.">		for (int x = 0; x &lt; 8; x++) {</span>
+
+<span class="nc bnc" id="L375" title="All 2 branches missed.">			for (int y = 0; y &lt; 8; y++) {</span>
+
+<span class="nc bnc" id="L377" title="All 2 branches missed.">				if (_board.getSpotAt(x, y).getSpotColor() == Color.WHITE) {</span>
+<span class="nc" id="L378">					countWhites++;</span>
+<span class="nc" id="L379">				}</span>
+
+<span class="nc bnc" id="L381" title="All 2 branches missed.">				else if (_board.getSpotAt(x, y).getSpotColor() == Color.BLACK</span>
+<span class="nc bnc" id="L382" title="All 2 branches missed.">						&amp;&amp; (_board.getSpotAt(x, y).isEmpty() == false)) {</span>
+
+<span class="nc" id="L384">					countBlacks++;</span>
+				}
+
+			}
+
+
+
+		}
+<span class="nc" id="L392">		return false;</span>
+
+	}
+	
+	
+
+    /**
+     * Returns the index into the {@link ReversiObject#players} array of the
+     * player to whom control should transition.
+     */
+	
+<span class="fc" id="L403">	protected static final int[] DX = { -1, 0, 1, -1, 1, -1, 0, 1 };</span>
+<span class="fc" id="L404">    protected static final int[] DY = { -1, -1, -1, 0, 0, 1, 1, 1 };</span>
+
+    /**
+     * Returns true if the supplied piece represents a legal move for the
+     * owning player.
+     */
+    public boolean isLegalMove (Spot piece)
+    {
+        // disallow moves on out of bounds and already occupied spots
+<span class="fc bfc" id="L413" title="All 2 branches covered.">        if (!piece.isEmpty()) {</span>
+<span class="fc" id="L414">            return false;</span>
+        }
+        //System.out.println();
+        // determine whether this piece &quot;captures&quot; pieces of the opposite color
+<span class="fc bfc" id="L418" title="All 2 branches covered.">        for (int ii = 0; ii &lt; DX.length; ii++) {</span>
+            // look in this direction for captured pieces
+<span class="fc" id="L420">            boolean sawOther = false, sawSelf = false;</span>
+<span class="fc" id="L421">            int x = piece.getSpotX(), y = piece.getSpotY();</span>
+            
+            //System.out.println(&quot;x = &quot; + x + &quot;, y = &quot; + y);
+<span class="pc bpc" id="L424" title="1 of 2 branches missed.">            for (int dd = 0; dd &lt; _size; dd++) {</span>
+<span class="fc" id="L425">                x += DX[ii];</span>
+<span class="fc" id="L426">                y += DY[ii];</span>
+                //System.out.println(&quot;x = &quot; + x + &quot;, y = &quot; + y);
+
+                // stop when we end up off the board
+<span class="fc bfc" id="L430" title="All 2 branches covered.">                if (!inBounds(x, y)) {</span>
+<span class="fc" id="L431">                    break;</span>
+                }
+
+                
+<span class="fc" id="L435">                int color = getColor(x, y);</span>
+                int playCol; //Will hold Player Color
+<span class="fc bfc" id="L437" title="All 2 branches covered.">                if (_next_to_play == Player.BLACK) {</span>
+<span class="fc" id="L438">                	playCol = 0;</span>
+<span class="fc" id="L439">                } else {</span>
+<span class="fc" id="L440">                	playCol = 1;</span>
+                }
+                
+                //System.out.println(&quot;Color: &quot; + color);
+                //System.out.println(&quot;My Color: &quot; + playCol);
+<span class="fc bfc" id="L445" title="All 2 branches covered.">                if (color == -1) {</span>
+<span class="fc" id="L446">                    break;</span>
+<span class="fc bfc" id="L447" title="All 2 branches covered.">                } else if (color == 1 - playCol) {</span>
+<span class="fc" id="L448">                    sawOther = true;</span>
+<span class="pc bpc" id="L449" title="1 of 2 branches missed.">                } else if (color == playCol) {</span>
+<span class="fc" id="L450">                    sawSelf = true;</span>
+<span class="fc" id="L451">                    break;</span>
+                }
+            }
+
+            // if we saw at least one other piece and one of our own, we have a
+            // legal move
+<span class="fc bfc" id="L457" title="All 4 branches covered.">            if (sawOther &amp;&amp; sawSelf) {</span>
+<span class="fc" id="L458">                return true;</span>
+            }
+        }
+<span class="fc" id="L461">        return false;</span>
+    }
+
+    /**
+     * Returns true if the player with the specified color has legal moves.
+     */
+    public boolean hasLegalMoves (int color, Spot piece)
+    {
+        // search every board position for a legal move
+
+<span class="nc" id="L471">        Color owner = piece.getSpotColor();</span>
+<span class="nc" id="L472">        Point Piece = null;</span>
+<span class="nc bnc" id="L473" title="All 2 branches missed.">        for (int yy = 0; yy &lt; _size; yy++) {</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">            for (int xx = 0; xx &lt; _size; xx++) {</span>
+<span class="nc bnc" id="L475" title="All 2 branches missed.">                if (getColor(xx, yy) != -1) {</span>
+<span class="nc" id="L476">                    continue;</span>
+                }
+<span class="nc" id="L478">                Piece.x = xx;</span>
+<span class="nc" id="L479">                Piece.y = yy;</span>
+<span class="nc bnc" id="L480" title="All 2 branches missed.">                if (isLegalMove(_board.getSpotAt(Piece.x, Piece.y))) {</span>
+<span class="nc" id="L481">                    return true;</span>
+                }
+            }
+        }
+<span class="nc" id="L485">        return false;</span>
+    }
+    
+    public boolean hasLegalMoves ()
+    {
+    	
+<span class="fc bfc" id="L491" title="All 2 branches covered.">    	for (Spot s: _board) {</span>
+   
+<span class="fc bfc" id="L493" title="All 2 branches covered.">                if (isLegalMove(s)) {</span>
+<span class="fc" id="L494">                    return true;</span>
+                }
+            }
+    
+        
+    
+<span class="fc" id="L500">        return false;</span>
+    }
+
+    /**
+     * Determines which pieces should be flipped based on the placement of the
+     * specified piece onto the board. The pieces in question are changed to
+     * the appropriate color and updated in the game object.
+     */
+    public void flipPieces (Spot placed)
+    {
+<span class="fc" id="L510">        ArrayList&lt;Spot&gt; toflip = new ArrayList&lt;Spot&gt;();</span>
+
+        // determine where this piece &quot;captures&quot; pieces of the opposite color
+<span class="fc bfc" id="L513" title="All 2 branches covered.">        for (int ii = 0; ii &lt; DX.length; ii++) {</span>
+            // look in this direction for captured pieces
+<span class="fc" id="L515">            int x = placed.getSpotX(), y = placed.getSpotY();</span>
+            int next;
+			int playCol; // Will hold Player Color
+<span class="fc bfc" id="L518" title="All 2 branches covered.">			if (_next_to_play == Player.BLACK) {</span>
+<span class="fc" id="L519">				playCol = 0;</span>
+<span class="fc" id="L520">				next = 1;</span>
+<span class="fc" id="L521">			} else {</span>
+<span class="fc" id="L522">				playCol = 1;</span>
+<span class="fc" id="L523">				next = 0; </span>
+			}
+
+			
+<span class="pc bpc" id="L527" title="1 of 2 branches missed.">            for (int dd = 0; dd &lt; _size; dd++) {</span>
+<span class="fc" id="L528">                x += DX[ii];</span>
+<span class="fc" id="L529">                y += DY[ii];</span>
+               
+
+                // stop when we end up off the board
+<span class="fc bfc" id="L533" title="All 2 branches covered.">                if (!inBounds(x, y)) {</span>
+<span class="fc" id="L534">                    break;</span>
+                }
+
+<span class="fc" id="L537">                int color = getColor(x, y);</span>
+<span class="fc bfc" id="L538" title="All 2 branches covered.">                if (color == -1) {</span>
+<span class="fc" id="L539">                    break;</span>
+
+<span class="fc bfc" id="L541" title="All 2 branches covered.">                } else if (color == next) {</span>
+                    // add the piece at this coordinates to our to flip list
+<span class="pc bpc" id="L543" title="1 of 2 branches missed.">                    for (Spot piece : _board) {</span>
+<span class="fc bfc" id="L544" title="All 4 branches covered.">                        if (piece.getSpotX() == x &amp;&amp; piece.getSpotY() == y) {</span>
+<span class="fc" id="L545">                            toflip.add(piece);</span>
+<span class="fc" id="L546">                            break;</span>
+                        }
+                    }
+
+<span class="pc bpc" id="L550" title="1 of 2 branches missed.">                } else if (color == playCol) {</span>
+                    // flip all the toflip pieces because we found our pair
+                	
+<span class="fc bfc" id="L553" title="All 2 branches covered.">                    for (Spot piece : toflip) {</span>
+                    	Color temp;
+<span class="fc bfc" id="L555" title="All 2 branches covered.">                        if (piece.getSpotColor() == Color.BLACK) {</span>
+<span class="fc" id="L556">                        	temp = Color.WHITE;</span>
+<span class="fc" id="L557">                        } else {</span>
+<span class="fc" id="L558">                        	temp = Color.BLACK;</span>
+                        }
+                        
+<span class="fc" id="L561">                        piece.setSpotColor(temp);</span>
+                    }
+<span class="fc" id="L563">                    break;</span>
+                }
+            }
+<span class="fc" id="L566">            toflip.clear();</span>
+        }
+<span class="fc" id="L568">    }</span>
+    
+    public final Color getColorC (int x, int y)
+    {
+<span class="fc" id="L572">        return _board.getSpotAt(x, y).getSpotColor();</span>
+    }
+    
+    public final int getColor (int x, int y)
+    {
+<span class="fc bfc" id="L577" title="All 2 branches covered.">    	if (_board.getSpotAt(x, y).isEmpty() == true) {</span>
+<span class="fc" id="L578">    		return -1;</span>
+<span class="fc bfc" id="L579" title="All 2 branches covered.">    	} else if (_board.getSpotAt(x, y).getSpotColor() == Color.BLACK) {</span>
+<span class="fc" id="L580">    		return 0;</span>
+    	} else {
+<span class="fc" id="L582">    		return 1;</span>
+    	}
+    	
+    }
+    
+    public int getColor (Spot spot)
+    {
+    	
+<span class="fc" id="L590">    	int x = spot.getSpotX();</span>
+<span class="fc" id="L591">    	int y = spot.getSpotY();</span>
+    			
+    	
+<span class="fc bfc" id="L594" title="All 4 branches covered.">    	if (_board.getSpotAt(x, y).getSpotColor() == Color.BLACK &amp;&amp; _board.getSpotAt(x, y).isEmpty() == true) {</span>
+<span class="fc" id="L595">    		return -1;</span>
+    	}
+<span class="pc bpc" id="L597" title="1 of 4 branches missed.">    	if (_board.getSpotAt(x, y).getSpotColor() == Color.BLACK &amp;&amp; _board.getSpotAt(x, y).isEmpty() == false) {</span>
+<span class="fc" id="L598">    		return 0;</span>
+    	}
+<span class="pc bpc" id="L600" title="1 of 2 branches missed.">    	if (_board.getSpotAt(x, y).getSpotColor() == Color.WHITE) {</span>
+<span class="fc" id="L601">    		return 1;</span>
+    	}
+    	
+    	else {
+<span class="nc" id="L605">    		return -2;</span>
+    	}
+    }
+    
+    
+    public final boolean inBounds (Spot spot)
+    {
+    	
+<span class="fc" id="L613">    	int x = spot.getSpotX();</span>
+<span class="fc" id="L614">    	int y = spot.getSpotY();</span>
+    	
+<span class="pc bpc" id="L616" title="4 of 8 branches missed.">        return x &gt;= 0 &amp;&amp; y &gt;= 0 &amp;&amp; x &lt; this._size &amp;&amp; y &lt; this._size;</span>
+    }
+    
+    
+    public final boolean inBounds (int x, int y)
+    {
+    	
+<span class="fc bfc" id="L623" title="All 8 branches covered.">        return x &gt;= 0 &amp;&amp; y &gt;= 0 &amp;&amp; x &lt; this._size &amp;&amp; y &lt; this._size;</span>
+    }
+    
+    
+    protected int _size;
+    protected int[] _state;
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span>AllTests (17.01.2023. 10:46:39)</div></body></html>
